@@ -15,13 +15,13 @@ module Measures
       end
     end
 
-    def self.get_value_set_oids_from_hqmf(hqmf_path)
+    def self.get_value_set_oids_from_hqmf(hqmf_path, cache=false)
       hash = Digest::MD5.hexdigest(hqmf_path)
       FileUtils.mkdir_p Measures::Loader::HQMF_VS_OID_CACHE
       cache_file = File.join(Measures::Loader::HQMF_VS_OID_CACHE, "#{hash}.json")
       
       oids = nil
-      if File.exists? cache_file
+      if cache && File.exists?(cache_file)
         oids = JSON.parse(File.new(cache_file).read)
       else
         original_stdout = $stdout
@@ -32,7 +32,7 @@ module Measures
           $stdout = original_stdout
         end
         oids = measure.as_hqmf_model.all_code_set_oids
-        File.open(cache_file, 'w') {|f| f.write(JSON.pretty_generate(oids)) }
+        File.open(cache_file, 'w') {|f| f.write(JSON.pretty_generate(oids)) } if cache
       end
       oids
     end

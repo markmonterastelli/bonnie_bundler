@@ -26,7 +26,7 @@ module Measures
 
       measure_details = measure_details_hash[hqmf_set_id]
 
-      measure = load_measure_xml(xml_path, user, vsac_user, vsac_password, measure_details, false)
+      measure = load_measure_xml(xml_path, user, vsac_user, vsac_password, measure_details, false, true)
 
       Measures::Loader.save_sources(measure, xml_path, html_path)
 
@@ -38,10 +38,10 @@ module Measures
       measure
     end
 
-    def self.load_measure_xml(xml_path, user, vsac_user, vsac_password, measure_details, overwrite_valuesets=true)
+    def self.load_measure_xml(xml_path, user, vsac_user, vsac_password, measure_details, overwrite_valuesets=true, cache=false)
 
       begin
-        value_set_oids = Measures::ValueSetLoader.get_value_set_oids_from_hqmf(xml_path)
+        value_set_oids = Measures::ValueSetLoader.get_value_set_oids_from_hqmf(xml_path, cache)
       rescue Exception => e
         raise HQMFException.new "Error Loading HQMF" 
       end

@@ -40,10 +40,10 @@ module Measures
 
     end
 
-    def self.load_measure_hqmf(hqmf_path, user, vsac_user, vsac_password, measure_details)
+    def self.load_measure_xml(xml_path, user, vsac_user, vsac_password, measure_details)
 
       begin
-        value_set_oids = Measures::ValueSetLoader.get_value_set_oids_from_hqmf(hqmf_path)
+        value_set_oids = Measures::ValueSetLoader.get_value_set_oids_from_hqmf(xml_path)
       rescue Exception => e
         raise HQMFException.new "Error Loading HQMF" 
       end
@@ -55,7 +55,7 @@ module Measures
 
       begin
         value_set_models = Measures::ValueSetLoader.get_value_set_models(value_set_oids,user)
-        measure = Measures::Loader.load(user, hqmf_path, value_set_models, measure_details)
+        measure = Measures::Loader.load(user, xml_path, value_set_models, measure_details)
         
         measure.save!
         measure

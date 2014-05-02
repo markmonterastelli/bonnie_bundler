@@ -6,29 +6,36 @@ module Measures
     VALUE_SET_PATH = File.join(".", "db", "value_sets")
     HQMF_VS_OID_CACHE = File.join(".", "db", "hqmf_vs_oid_cache")
     
-    def self.load(user, hqmf_path, value_set_models, measure_details=nil)
-      hqmf_contents = Nokogiri::XML(File.new hqmf_path).to_s
-      measure_id = HQMF::Parser.parse_fields(hqmf_contents, HQMF::Parser::HQMF_VERSION_1)['id']
+    def self.load(user, xml_path, value_set_models, measure_details=nil)
+      xml_contents = Nokogiri::XML(File.new xml_path).to_s
+
+      parser = get_parser(xml_contents)
+      version = get_version(parser)
+      measure_id = parser.parse_fields(xml_contents, version)['id']
 
       codes_by_oid = HQMF2JS::Generator::CodesToJson.from_value_sets(value_set_models)  if value_set_models
 
       # Parsed HQMF
-      measure = Measures::Loader.load_hqmf(hqmf_contents, user, codes_by_oid, measure_details)
+      measure = Measures::Loader.load_measure(xml_contents, user, codes_by_oid, measure_details)
 
       measure
     end
 
 
-    def self.load_hqmf(hqmf_contents, user, codes_by_oid, measure_details=nil)
-      hqmf = HQMF::Parser.parse(hqmf_contents, HQMF::Parser::HQMF_VERSION_1, codes_by_oid)
+    def self.load_measure(xml_contents, user, codes_by_oid, measure_details=nil)
+      
+      parser = get_parser(xml_contents)
+      version = get_version(parser)
+      hqmf = parser.parse(xml_contents, version, codes_by_oid)
+
       # go into and out of json to make sure that we've converted all the symbols to strings, this will happen going to mongo anyway if persisted
       json = JSON.parse(hqmf.to_json.to_json, max_nesting: 250)
 
       measure_oids = codes_by_oid.keys if codes_by_oid
-      Measures::Loader.load_hqmf_json(json, user, measure_oids, measure_details)
+      Measures::Loader.load_hqmf_model_json(json, user, measure_oids, measure_details)
     end
 
-    def self.load_hqmf_json(json, user, measure_oids, measure_details=nil)
+    def self.load_hqmf_model_json(json, user, measure_oids, measure_details=nil)
 
       measure = Measure.new
       measure.user = user if user
@@ -108,6 +115,22 @@ module Measures
 
     def self.parse_measures_yml(measures_yml)
       YAML.load_file(measures_yml)['measures']
+    end
+
+    def self.get_parser(xml_contents)
+      if (SimpleXml::Parser.valid? xml_contents)
+        SimpleXml::Parser
+      else
+        HQMF::Parser
+      end
+    end
+
+    def self.get_version(parser)
+      if parser.name == 'HQMF::Parser'
+        HQMF::Parser::HQMF_VERSION_1
+      else
+        SimpleXml::Parser::SIMPLEXML_VERSION_1
+      end
     end
 
   end

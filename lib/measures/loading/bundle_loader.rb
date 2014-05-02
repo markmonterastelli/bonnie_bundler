@@ -75,7 +75,7 @@ module Measures
         measure_json = JSON.parse(File.read(json_path), max_nesting: 250)
         hqmf_model = HQMF::Document.from_json(measure_json)
         measure_details = JSON.parse(File.read(metadata_path)) if !measure_details && metadata_path
-        measure = Measures::Loader.load_hqmf_json(measure_json, user, hqmf_model.all_code_set_oids, measure_details)
+        measure = Measures::Loader.load_hqmf_model_json(measure_json, user, hqmf_model.all_code_set_oids, measure_details)
       end
 
       Measures::Loader.save_sources(measure, hqmf_path, html_path)

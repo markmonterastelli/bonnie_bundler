@@ -6,7 +6,7 @@ class Measure
   MP_START_DATE = Time.gm(2012,1,1,0,0).to_i
   TYPES = ["ep", "eh"]
 
-  store_in collection: 'measures'
+  store_in collection: 'draft_measures'
 
   field :id, type: String
   field :measure_id, type: String
